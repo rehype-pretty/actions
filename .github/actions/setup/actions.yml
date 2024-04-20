@@ -1,0 +1,80 @@
+name: 'Setup'
+description: 'setup runtimes and package managers for JavaScript projects'
+
+inputs:
+  package-manager:
+    description: 'The package manager to use: bun, pnpm, npm, or yarn (will use yarn classic)'
+    required: true
+    default: 'bun'
+  package-manager-version:
+    description: 'The version of the package manager to use'
+    required: false
+    default: 'latest'
+  install-dependencies:
+    description: 'Install Dependencies'
+    required: false
+    default: 'true'
+  frozen-lockfile:
+    description: 'Use a frozen lockfile'
+    required: false
+    default: 'true'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 'Setup Bun 🐰'
+      shell: bash
+      # if: ${{ inputs.package-manager == 'bun' }}
+      uses: oven-sh/setup-bun@v1
+      with:
+        bun-version: 'latest'
+
+    - name: '🟨 Setup pnpm'
+      shell: bash
+      if: ${{ inputs.package-manager == 'pnpm' }}
+      uses: pnpm/action-setup@v3
+      with:
+        version: ${{ inputs.package-manager-version }}
+
+    - name: 'Setup Node.js 🐢'
+      uses: actions/setup-node@v4
+      with:
+        node-version: 'lts/*'
+        cache: '${{ inputs.package-manager }}'
+
+    - name: '📦🐰 Install Dependencies - Bun'
+      shell: bash
+      if: ${{ inputs.package-manager == 'bun' }}
+      run: bun install --frozen-lockfile=${{ inputs.frozen-lockfile }}
+
+    - name: '📦🟨 Install Dependencies - pnpm'
+      shell: bash
+      if: ${{ inputs.package-manager == 'pnpm' }}
+      run: |
+        pnpm --version
+
+        if [[ ${{ inputs.install-dependencies }} == 'true' ]]; then
+          pnpm install --frozen-lockfile=${{ inputs.frozen-lockfile }}
+        fi
+
+    - name: '📦🚮 Setup npm'
+      shell: bash
+      if: ${{ inputs.package-manager == 'npm' }}
+      run: |
+        npm install --global npm@latest
+        npm --version
+
+        if [[ ${{ inputs.install-dependencies }} == 'true' ]]; then
+          npm install --frozen-lockfile=${{ inputs.frozen-lockfile }}
+        fi
+
+    - name: '📦🚮 Setup Yarn Classic'
+      shell: bash
+      if: ${{ inputs.package-manager == 'yarn' }}
+      run: |
+        bun add --global yarn@1.22.22
+        yarn --version
+
+        if [[ ${{ inputs.install-dependencies }} == 'true' ]]; then
+          yarn install --frozen-lockfile=${{ inputs.frozen-lockfile }}
+        fi
