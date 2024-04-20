@@ -22,9 +22,9 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    # always install it for faster installation of other tools
     - name: 'Setup Bun 🐰'
       shell: bash
-      # if: ${{ inputs.package-manager == 'bun' }}
       uses: oven-sh/setup-bun@v1
       with:
         bun-version: 'latest'
